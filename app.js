@@ -22,14 +22,8 @@ function base64urlUnescape(str) {
   return str.replace(/\-/g, '+').replace(/_/g, '/');
 }
 
-/***************************
- * INTEGRATE WITH KEYCLOAK *
- ***************************/
-
-// 1. Create a session memory store
 var memoryStore = new session.MemoryStore();
- 
-// 2. Establish a session
+
 app.use(session({
   secret: 'some secret',
   resave: false,
@@ -37,7 +31,6 @@ app.use(session({
   store: memoryStore
 }));
 
-// 3. Configure keycloak 
 var ckConfig = {
   clientId: "vueclient",
   bearerOnly: true,
@@ -46,18 +39,11 @@ var ckConfig = {
   "enable-cors": true
 };
 
-
-
-// 4. Instantiate keycloak 
 var keycloak = new Keycloak({store: memoryStore},ckConfig);
 
 var lastToken = {};
 
-// 5. Set Express to use Keycloak
 app.use( keycloak.middleware() );
-
-// 6. Protect all routes
-
 
 var displayToken = function(req, res, next) {
   var auth = req.headers['authorization'];
@@ -67,7 +53,6 @@ var displayToken = function(req, res, next) {
     
     inToken = auth.slice('bearer '.length);
     console.log(inToken);
-    //keycloak.
     res.json({"data": "Empty"});
   }
   else if (lastToken !== {}) {
@@ -75,7 +60,7 @@ var displayToken = function(req, res, next) {
     var tokenInfo = "i am Empty"
     jwt.verify(lastToken,cert,'RS256',function(err,verifiedJwt){ // was nJWt
       if(err){
-        console.log('Err:\n'+err); // Token has expired, has been tampered with, etc
+        console.log('Err:\n'+err);
         tokenInfo = err
       }
       else{
@@ -109,52 +94,11 @@ var displayToken = function(req, res, next) {
         //res.json(verifiedJwt);
       }
     });
-    //var decoded = jwt.decode(lastToken);
-    //console.log('decoded => '+JSON.parse(decoded));
-    //res.json(decoded); // Affiche le json décodé
-    //res.json(base64url.decode(lastToken));
-    //res.json(tokenInfo)
   }
   else {
     res.json({"data": "Empty"});
   }  
 }
-
-var getAccessToken = function(req, res, next) {
-
-  var inToken = null;
-  var auth = req.headers['authorization'];
-
-  var token = {
-    "access_token": "SOME_TOKEN",
-    "clientId": "oauth-client-1",
-    "scope": ["foo"]
-    }
-
-  req.access_token = null; 
-
-  if (auth && auth.toLowerCase().indexOf('bearer') == 0) {
-    
-    inToken = auth.slice('bearer '.length);
-    console.log(inToken)
-
-    if (inToken === "SOME_TOKEN") {
-      req.access_token = token;
-    }
-  }  
-  next();
-  return;
-
-};
-
-var requireAccessToken = function(req, res, next) {
-    if (req.access_token) {
-    next();
-    } else {
-    res.status(401).end();
-    }
-};
-
 
 var displayFruit =  function(req, res, next) {
   var inToken = null;
@@ -168,7 +112,6 @@ var displayFruit =  function(req, res, next) {
   res.json(["Apple","Pear","Grape","Orange","Other"]);
 }
 
-//app.all('*', keycloak.protect());
 app.get('/fruit', keycloak.protect(),displayFruit);
 app.get('/show', displayToken);
 
