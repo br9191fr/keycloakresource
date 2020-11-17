@@ -1,13 +1,11 @@
-var express = require("express");
-var cors = require('cors');
-var app = express();
-var Keycloak = require('keycloak-connect');
-var session = require('express-session');
-const parseJson = require('parse-json');
-const base64url = require('base64-url')
-var jwt = require('jsonwebtoken');
-var fs = require('fs');
-var nJwt = require('njwt');
+const express = require("express");
+const cors = require('cors');
+const app = express();
+const Keycloak = require('keycloak-connect');
+const session = require('express-session');
+const jwt = require('jsonwebtoken');
+const fs = require('fs');
+
 
 app.use(cors({
   origin: 'http://localhost:8080'
@@ -15,14 +13,14 @@ app.use(cors({
 
 function base64urlDecode(str) {
   return Buffer.from(base64urlUnescape(str), 'base64').toString();
-};
+}
 
 function base64urlUnescape(str) {
   str += Array(5 - str.length % 4).join('=');
   return str.replace(/\-/g, '+').replace(/_/g, '/');
 }
 
-var memoryStore = new session.MemoryStore();
+let memoryStore = new session.MemoryStore();
 
 app.use(session({
   secret: 'some secret',
@@ -31,7 +29,7 @@ app.use(session({
   store: memoryStore
 }));
 
-var ckConfig = {
+const ckConfig = {
   clientId: "vueclient",
   bearerOnly: true,
   serverUrl: "http://localhost:8180/auth",
@@ -39,71 +37,68 @@ var ckConfig = {
   "enable-cors": true
 };
 
-var keycloak = new Keycloak({store: memoryStore},ckConfig);
+let keycloak = new Keycloak({store: memoryStore}, ckConfig);
 
-var lastToken = {};
+let lastToken = {};
 
 app.use( keycloak.middleware() );
 
-var displayToken = function(req, res, next) {
-  var auth = req.headers['authorization'];
-  var pubKey = fs.readFileSync('pubKey.txt');
-  var cert = fs.readFileSync('cert.txt');
-  if (auth && auth.toLowerCase().indexOf('bearer') == 0) {
+let displayToken = function(req, res) {
+  let auth = req.headers['authorization'];
+  let cert = fs.readFileSync('cert.txt');
+  if (auth && auth.toLowerCase().indexOf('bearer') === 0) {
     
-    inToken = auth.slice('bearer '.length);
+    let inToken = auth.slice('bearer '.length);
     console.log(inToken);
-    res.json({"data": "Empty"});
+    res.json({"bearer": inToken});
   }
   else if (lastToken !== {}) {
-    //console.log("LastToken is "+lastToken);
-    var tokenInfo = "i am Empty"
-    jwt.verify(lastToken,cert,'RS256',function(err,verifiedJwt){ // was nJWt
+    let tokenInfo = "i am Empty"
+    jwt.verify(lastToken,cert,'RS256',function(err,verifiedJwt){
       if(err){
         console.log('Err:\n'+err);
-        tokenInfo = err
+        tokenInfo = {"Error" : err}
       }
       else{
-        console.log("Token is OK"); // Will contain the header and body
-        console.log("Checked Token is :\n"+verifiedJwt)
-        var segments = lastToken.split('.');
-        var headerSeg = segments[0];
-        var payloadSeg = segments[1];
-        var signatureSeg = segments[2];
-        var h = JSON.parse(base64urlDecode(headerSeg));
-        var p = JSON.parse(base64urlDecode(payloadSeg));
+        // verifiedJwt will contain the payload of the jwt
+        console.log('Token is OK');
 
-        var data = {
+        const segments = lastToken.split('.');
+
+        const headerSeg = segments[0];
+        const payloadSeg = segments[1];
+        const signatureSeg = segments[2];
+        const h = JSON.parse(base64urlDecode(headerSeg));
+        const p = JSON.parse(base64urlDecode(payloadSeg));
+
+        const data = {
           header: h,
           payload: p,
           signature: signatureSeg
         }
-        console.log('h => \n'+h);
-        console.log('p => \n'+p);
-        console.log('data => \n'+data);
+        console.log('scope1 => \n'+data.payload.scope);
+        console.log('token :\n'+verifiedJwt);
 
 
-        tokenInfo = jwt.decode(verifiedJwt)
-        var decoded = jwt.decode(lastToken);
+        let decoded = jwt.decode(lastToken);
         console.log('decoded => '+decoded.aud);
-        var decoded1 = jwt.decode(verifiedJwt);
-        console.log('decoded1 => '+decoded.aud);
 
+        console.log('decoded1 => '+verifiedJwt.aud);
 
-        res.json(data); // was         res.json(decoded)
-        //res.json(verifiedJwt);
+        tokenInfo = data
       }
     });
+    res.json(tokenInfo);
   }
   else {
-    res.json({"data": "Empty"});
+    res.json({"Error": "??"});
   }  
 }
 
-var displayFruit =  function(req, res, next) {
-  var inToken = null;
-  var auth = req.headers['authorization'];
-  if (auth && auth.toLowerCase().indexOf('bearer') == 0) {
+let displayFruit =  function(req, res) {
+  let inToken = null;
+  let auth = req.headers['authorization'];
+  if (auth && auth.toLowerCase().indexOf('bearer') === 0) {
 
     inToken = auth.slice('bearer '.length);
 
