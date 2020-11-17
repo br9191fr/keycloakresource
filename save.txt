@@ -1,0 +1,8 @@
+console.log("LastToken is "+lastToken);
+    //res.json(lastToken);
+    //var d1 = JSON.parse(base64url.decode(lastToken))
+    //console.log("d1="+d1);
+    var decTok = base64url.decode(lastToken);
+    console.log("decTok=\n"+decTok);
+    var decoded = jwt.verify(decTok, publicKey);
+    console.log(decoded);
