@@ -30,7 +30,7 @@ app.use(session({
 }));
 
 const ckConfig = {
-  clientId: "vueclient",
+  clientId: "vueclient1",
   bearerOnly: true,
   serverUrl: "http://localhost:8180/auth",
   realm: "AuthSrvTest",
@@ -104,10 +104,27 @@ let displayFruit =  function(req, res) {
 
     lastToken = inToken;
   }
-  res.json(["Apple","Pear","Grape","Orange","Other"]);
+  let result = ["Apple","Pear","Grape","Orange","Other"];
+  res.json(result);
+}
+let displaySubscriber = function(req,res) {
+  let auth = req.headers['authorization'];
+  let token = auth.slice('bearer '.length);
+  let decode = jwt.decode(token);
+  let subscriber = decode.sub;
+  let expires_in = decode.exp;
+
+  let exp = new Date(expires_in * 1000).toISOString().substr(11, 8);
+  let result = {"subscriber" : subscriber};
+  console.log('In Display Subscriber. Token =>\n'+token);
+  console.log('In Display Subscriber. Subscriber =>\n'+subscriber);
+  console.log('In Display Subscriber. Result =>\n'+result.subscriber);
+  console.log('In Display Subscriber. Expires at =>\n'+exp);
+  res.json(result);
 }
 
 app.get('/fruit', keycloak.protect(),displayFruit);
+app.get('/subscriber', keycloak.protect(),displaySubscriber);
 app.get('/show', displayToken);
 
 app.listen(3000, () => {
