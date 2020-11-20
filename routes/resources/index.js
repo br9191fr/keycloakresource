@@ -3,11 +3,11 @@ var router = express.Router()
 
 
 router.get('/', function (req, res) {
-    res.send('Resources Home Page');
+    res.send('Resources Main Page');
 })
 
 router.get('/about', function (req, res) {
-    res.send('About Resources Page');
+    res.send('About Resources Folder Page');
 })
 
 
