@@ -61,9 +61,9 @@ let displayToken = function(req, res) {
       }
       else{
         // verifiedJwt will contain the payload of the jwt
-        console.log('In displayToken : Token is OK');
-        console.log('In displayToken : Last Token =>\n'+JSON.stringify(jwt.decode(lastToken)));
-        console.log('In displayToken : Verified Token =>\n'+JSON.stringify(verifiedJwt));
+        console.log('In displayToken: Token is OK');
+        //console.log('In displayToken : Last Token =>\n'+JSON.stringify(jwt.decode(lastToken)));
+        //console.log('In displayToken : Verified Token =>\n'+JSON.stringify(verifiedJwt));
         const segments = lastToken.split('.');
 
         const headerSeg = segments[0];
@@ -77,14 +77,9 @@ let displayToken = function(req, res) {
           payload: p,
           signature: signatureSeg
         }
-        console.log('scope1 => \n'+data.payload.scope);
-        console.log('token :\n'+verifiedJwt);
-
-
-        let decoded = jwt.decode(lastToken);
-        console.log('decoded => '+decoded.aud);
-
-        console.log('decoded1 => '+verifiedJwt.aud);
+        console.log('In displayToken scope: '+data.payload.scope);
+        console.log('In displayToken audience: '+verifiedJwt.aud);
+        console.log('In displayToken authorized party: '+verifiedJwt.azp);
 
         tokenInfo = data
       }
@@ -117,10 +112,6 @@ let displaySubscriberId = function(req,res) {
 
   let exp = new Date(expires_in * 1000).toISOString().substr(11, 8);
   let result = {"subscriber" : subscriber};
-  console.log('In Display Subscriber. Token =>\n'+token);
-  console.log('In Display Subscriber. Subscriber =>\n'+subscriber);
-  console.log('In Display Subscriber. Result =>\n'+result.subscriber);
-  console.log('In Display Subscriber. Expires at =>\n'+exp);
   res.json(result);
 }
 
@@ -133,15 +124,30 @@ let displaySubscriber = function(req,res) {
 
   let exp = new Date(expires_in * 1000).toISOString().substr(11, 8);
   let result = {"subscriber" : subscriber};
-  console.log('In Display Subscriber. Token =>\n'+token);
-  console.log('In Display Subscriber. Subscriber =>\n'+subscriber);
-  console.log('In Display Subscriber. Result =>\n'+result.subscriber);
-  console.log('In Display Subscriber. Expires at =>\n'+exp);
+  console.log('In Display Subscriber subscriber: '+result.subscriber);
+  console.log('In Display Subscriber expires at: '+exp);
   res.json(result);
 }
 
 app.get('/fruit', keycloak.protect(),displayFruit);
-app.get('/subscriber', keycloak.protect(),displaySubscriber);
+app.get('/subscriber-orig', keycloak.protect(),displaySubscriber);
+
+// does not work <= not allowed bad role
+//app.get('/subscriber', keycloak.protect('data_access1'),displaySubscriber);
+
+// does work <= allowed good role
+//app.get('/subscriber', keycloak.protect('vueclient1:data_access'),displaySubscriber);
+
+// does work <= allowed ??
+app.get('/subscriber', keycloak.protect('data_access'),displaySubscriber);
+
+// does work <= allowed for bruno,vueclient1
+//app.get('/subscriber', keycloak.protect('testrole'),displaySubscriber);
+
+// does work <= allowed for bruno,vueclient1
+// does not work <= not allowed for bricci
+//app.get('/subscriber', keycloak.protect('realm:testrole1'),displaySubscriber);
+
 app.get('/show', displayToken);
 
 app.listen(3000, () => {
