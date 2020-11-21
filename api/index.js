@@ -8,9 +8,7 @@ module.exports = {
         let inToken = null;
         let auth = req.headers['authorization'];
         if (auth && auth.toLowerCase().indexOf('bearer') === 0) {
-
             inToken = auth.slice('bearer '.length);
-
             lastToken = inToken;
         }
         let result = ["Apple","Pear","Grape","Orange","Other"];
@@ -20,7 +18,6 @@ module.exports = {
     let auth = req.headers['authorization'];
     let cert = fs.readFileSync('cert.txt');
     if (auth && auth.toLowerCase().indexOf('bearer') === 0) {
-
         let inToken = auth.slice('bearer '.length);
         console.log(inToken);
         res.json({"bearer": inToken});
