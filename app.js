@@ -48,6 +48,8 @@ let displayHello = function (req, res) {
     res.render('hello', {title: "Accueil SrvTest", msg: "Bienvenue"})
 }
 app.get('/', displayHello);
+app.post('/data',api.setPostData);
+app.get('/data',api.getPostData);
 
 /** ----------------------------------- **/
 app.use(keycloak.middleware());
@@ -55,7 +57,7 @@ app.use('/resources', resources)
 app.get('/show', api.displayToken);
 app.get('/fruit', keycloak.protect(), api.displayFruit);
 app.get('/subscriber-orig', keycloak.protect(), api.displaySubscriber);
-app.get('/subscriber', keycloak.protect('data_access'), api.displaySubscriber);
+app.get('/subscriber', keycloak.protect('vueclient1:data_access'), api.displaySubscriber);
 /** ----------------------------------- **/
 
 // does not work <= not allowed bad role
