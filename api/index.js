@@ -2,8 +2,59 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const utils = require('../utils');
 let lastToken = {};
+let collectedData = {};
 
 module.exports = {
+    setPostData: function (req, res) {
+        let info = req.body.info;
+        let origin = req.body.origin;
+        let add = {}
+
+        collectedData = {
+            info : info,
+            origin : origin,
+            verify : true
+        };
+        if (req.body.add != undefined) { collectedData.other = JSON.parse(req.body.add); }
+        res.json(collectedData);
+    },
+    getPostData: function (req, res) {
+        let result = collectedData;
+        let answer = {
+            result : result,
+            other : 'Nothing'
+        }
+        if (req.query === undefined)
+            console.log("query is undefined");
+        else if (req.query === {})
+            console.log("query is {}");
+        else {
+            console.log("query is ok");
+            console.log ("what =>" + req.query.what);
+            console.log ("why =>" + req.query.why);
+            console.log ("query =>" + JSON.stringify(req.query));
+            for (var key in req.query) {
+                if (req.query.hasOwnProperty(key)) {
+                    /* useful code here */
+                    console.log("Found "+key+" =>"+req.query[key]);
+                }
+            }
+        }
+        if (req.query !== undefined && req.query !== {}) console.log("query =>"+req.query);
+        if (collectedData !== {} && collectedData.other !== undefined) {
+            // console.log('collectedData =>'+JSON.stringify(collectedData));
+            let other = collectedData.other;
+            if (other !== undefined && other !== {}) {
+                console.log("other is not empty");
+                let elts = {};
+                if (other.elt1 !== {}) { elts.elt1 = other.elt1;  }
+                if (other.elt2 !== {}) { elts.elt2 = other.elt2;  }
+                if (elts !== {}) answer.elts_checked = elts;
+            }
+        }
+
+        res.json(answer);
+    },
     displayFruit: function (req, res) {
         let inToken = null;
         let auth = req.headers['authorization'];
@@ -11,7 +62,7 @@ module.exports = {
             inToken = auth.slice('bearer '.length);
             lastToken = inToken;
         }
-        let result = ["Apple", "Pear", "Grape", "Orange", "Other"];
+        let result = ["Apple", "Pear", "Grape", "Orange", "Other","Nothing"];
         res.json(result);
     },
     displayToken: function (req, res) {
